@@ -2,22 +2,51 @@
 
 **DFIR case management platform for incident tracking, investigation notes, IOC linkage, and reporting.**
 
-IncidentDesk is a lightweight, defensive DFIR Case Manager designed for SOC/IR analyst workflows.
-It helps structure investigations from first alert to final report, without offensive features or enterprise bloat.
+IncidentDesk is a lightweight, defensive DFIR Case Manager built for realistic SOC/IR workflows.
+It helps analysts move from initial alert to structured investigation and final report without adding unnecessary enterprise complexity.
 
-## Why This Project Exists
-- Provide a realistic portfolio-grade DFIR case management app.
-- Demonstrate clean backend architecture (FastAPI + SQLAlchemy + Alembic).
-- Offer a usable analyst workflow: case lifecycle, timeline, IOC/artifact linkage, notes, reporting.
+## Table of Contents
+- [Overview](#overview)
+- [Core Capabilities](#core-capabilities)
+- [Analyst Workflow](#analyst-workflow)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Quickstart](#quickstart)
+- [Using Demo Data](#using-demo-data)
+- [Web Interface](#web-interface)
+- [REST API](#rest-api)
+- [Project Quality](#project-quality)
+- [Screenshots](#screenshots)
+- [Known Limits (MVP)](#known-limits-mvp)
+- [Roadmap](#roadmap)
+- [Defensive Scope](#defensive-scope)
+- [License](#license)
 
-## MVP Features
-- Case management: create, update, list, filter, close, reopen.
-- Investigation timeline with analyst events.
-- IOC management (IP, domain, URL, hash, CVE, email) with confidence/source/tags.
-- Artifact tracking (paths, outputs, links, text evidence).
-- Analyst notes with important flag.
-- Report generation in Markdown, HTML, and JSON.
-- Dark, responsive web UI with dashboard and case detail view.
+## Overview
+IncidentDesk exists to provide a credible, portfolio-grade DFIR application that is:
+- defensive by design
+- modular and testable
+- aligned with real analyst workflows
+- technically clean (FastAPI + SQLAlchemy + Alembic)
+
+It is intentionally **not** a SIEM, EDR, malware sandbox, or offensive tooling platform.
+
+## Core Capabilities
+- Case lifecycle management: create, update, filter, close, reopen.
+- Investigation timeline per case with actor, type, details, and linked context.
+- IOC management: IP, domain, URL, hash, CVE, email.
+- Artifact tracking: paths, command output, text extracts, links.
+- Analyst notes with `important` flag for critical context.
+- Investigation reporting in Markdown, HTML, and JSON.
+- Dark, responsive web UI for dashboard and investigation views.
+
+## Analyst Workflow
+1. Create a case from an alert or intake event.
+2. Add timeline milestones during triage and investigation.
+3. Link IOCs and artifacts as evidence evolves.
+4. Capture analyst notes and highlight important decisions.
+5. Close/reopen case depending on investigation outcome.
+6. Generate a report for handoff, documentation, or remediation tracking.
 
 ## Architecture
 
@@ -27,6 +56,7 @@ incidentdesk/
 ├── pyproject.toml
 ├── alembic.ini
 ├── alembic/
+│   └── versions/
 ├── app/
 │   ├── main.py
 │   ├── config.py
@@ -34,7 +64,19 @@ incidentdesk/
 │   ├── models.py
 │   ├── schemas.py
 │   ├── services/
+│   │   ├── case_service.py
+│   │   ├── timeline_service.py
+│   │   ├── ioc_service.py
+│   │   ├── artifact_service.py
+│   │   ├── note_service.py
+│   │   ├── report_service.py
+│   │   └── demo_service.py
 │   ├── routers/
+│   │   ├── web.py
+│   │   ├── api_cases.py
+│   │   ├── api_iocs.py
+│   │   ├── api_artifacts.py
+│   │   └── api_reports.py
 │   ├── templates/
 │   ├── static/
 │   └── utils/
@@ -47,36 +89,43 @@ incidentdesk/
 - FastAPI
 - SQLAlchemy 2.x
 - Alembic
-- SQLite (MVP)
-- Jinja2 templates
+- SQLite (MVP default)
+- Jinja2 server-side templates
 - pytest, ruff, mypy
 
 ## Quickstart
 
 ```bash
 cd incidentdesk
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e '.[dev]'
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-Open: `http://127.0.0.1:8000`
+Application URL: `http://127.0.0.1:8000`
 
-## Web Usage
+## Using Demo Data
+A fresh database starts empty by design.
+
+To populate realistic sample investigations:
+- Use the **Load Demo Dataset** button on `/` or **Seed Demo Data** on `/cases`.
+- Or call the endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/demo/seed
+```
+
+To reset and reload demo data from UI, use **Reset + Reload Demo**.
+
+## Web Interface
 - Dashboard: `/`
-- Cases list and create form: `/cases`
-- Case detail + timeline/IOC/artifact/notes: `/cases/{case_id}`
+- Cases list + creation + filters: `/cases`
+- Case detail (timeline, IOC, artifacts, notes): `/cases/{case_id}`
 - Report view: `/cases/{case_id}/report`
-- Demo data loader (web button): `POST /demo/seed`
 
-## Why the UI can be empty
-- A fresh database starts with zero cases by design.
-- Load realistic sample incidents from the dashboard or cases page via **Load Demo Dataset / Seed Demo Data**.
-- Use **Reset + Reload Demo** when you want to replace existing data with a clean demo set.
-
-## API Usage
+## REST API
 
 ### Cases
 - `GET /api/cases`
@@ -111,7 +160,8 @@ Open: `http://127.0.0.1:8000`
 - `GET /api/cases/{case_id}/report.html`
 - `GET /api/cases/{case_id}/report.json`
 
-## Tests and Quality
+## Project Quality
+Run local checks:
 
 ```bash
 ruff check .
@@ -119,29 +169,50 @@ mypy app
 pytest
 ```
 
-CI (`.github/workflows/ci.yml`) runs lint + type checks + tests on push/PR.
+CI workflow (`.github/workflows/ci.yml`) runs lint, type checks, and tests on push/PR.
 
 ## Screenshots
-Store captures in `docs/screenshots/`.
+Store UI captures in:
+- `docs/screenshots/`
 
-## Roadmap
-- Pagination and sorting for cases.
-- Authentication/authorization (RBAC).
-- Full-text IOC search improvements.
-- Better report rendering templates/PDF export.
-- Optional integrations (ticketing, threat intel feeds).
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Cases
+![Cases](docs/screenshots/cases.png)
+
+### Case Detail
+![Case Detail](docs/screenshots/case_detail.png)
+
+### Report
+![Report](docs/screenshots/report.png)
 
 ## Known Limits (MVP)
-- SQLite only by default.
-- No auth in MVP.
-- No binary evidence upload pipeline.
-- HTML report endpoint returns preformatted HTML from markdown text.
+- SQLite default only.
+- No authentication/authorization yet.
+- No binary upload/evidence pipeline.
+- HTML report rendering is intentionally simple.
 
-## Defensive / DFIR Scope
-IncidentDesk is strictly defensive and investigation-focused:
-- incident tracking
+## Roadmap
+- Pagination, sorting, and richer filtering.
+- RBAC/authentication layer.
+- Better IOC search and correlation features.
+- Improved reporting templates and optional PDF export.
+- Optional integrations (ticketing, intel feeds).
+
+## Defensive Scope
+IncidentDesk is strictly defensive and investigation-focused.
+
+Included:
+- incident/case tracking
 - evidence organization
-- IOC correlation support
-- reporting and remediation documentation
+- IOC linkage and analysis support
+- remediation-oriented reporting
 
-No offensive capabilities are included.
+Excluded:
+- offensive operations
+- exploit tooling
+- attack automation
+
+## License
+MIT. See [LICENSE](LICENSE).
