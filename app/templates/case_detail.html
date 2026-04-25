@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ case.case_id }} | IncidentDesk{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <h1>{{ case.case_id }} - {{ case.title }}</h1>
+      <p>{{ case.description }}</p>
+    </div>
+    <div class="quick-actions">
+      {% if case.status.value != 'closed' %}
+      <form method="post" action="/cases/{{ case.case_id }}/close"><button class="btn danger">Close</button></form>
+      {% else %}
+      <form method="post" action="/cases/{{ case.case_id }}/reopen"><button class="btn">Reopen</button></form>
+      {% endif %}
+      <a class="btn secondary" href="/cases/{{ case.case_id }}/report">Report</a>
+    </div>
+  </div>
+  <div class="meta-grid">
+    <div><strong>Status:</strong> <span class="badge status-{{ case.status.value }}">{{ case.status.value }}</span></div>
+    <div><strong>Severity:</strong> <span class="badge sev-{{ case.severity.value }}">{{ case.severity.value }}</span></div>
+    <div><strong>Owner:</strong> {{ case.owner }}</div>
+    <div><strong>Priority:</strong> P{{ case.priority }}</div>
+    <div><strong>Tags:</strong> {{ case.tags }}</div>
+  </div>
+  <div class="meta-grid counts-grid">
+    <div><strong>Timeline:</strong> {{ timeline|length }}</div>
+    <div><strong>IOC:</strong> {{ iocs|length }}</div>
+    <div><strong>Artifacts:</strong> {{ artifacts|length }}</div>
+    <div><strong>Notes:</strong> {{ notes|length }}</div>
+    <div><strong>Updated:</strong> {{ case.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+  </div>
+</section>
+
+<div class="two-col">
+  <section class="panel">
+    <h2>Timeline</h2>
+    <form class="stack-form" method="post" action="/cases/{{ case.case_id }}/timeline">
+      <input name="title" placeholder="Event title" required />
+      <input name="event_type" placeholder="event_type" />
+      <input name="actor" placeholder="actor" />
+      <textarea name="details" placeholder="details"></textarea>
+      <button class="btn" type="submit">Add Event</button>
+    </form>
+    {% if timeline %}
+    <ul class="list">
+      {% for item in timeline %}
+      <li><strong>{{ item.timestamp.strftime('%Y-%m-%d %H:%M') }}</strong> - {{ item.title }} ({{ item.event_type }})</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No timeline events yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>IOC</h2>
+    <form class="stack-form" method="post" action="/cases/{{ case.case_id }}/iocs">
+      <select name="ioc_type">{% for t in ioc_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select>
+      <input name="value" placeholder="IOC value" required />
+      <input name="source" placeholder="source" />
+      <select name="confidence">{% for c in confidence_levels %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select>
+      <input name="tags" placeholder="tags" />
+      <textarea name="note" placeholder="note"></textarea>
+      <button class="btn" type="submit">Add IOC</button>
+    </form>
+    {% if iocs %}
+    <ul class="list">
+      {% for ioc in iocs %}
+      <li><strong>{{ ioc.ioc_type.value }}</strong> - {{ ioc.value }} ({{ ioc.confidence.value }})</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No IOC linked to this case yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="two-col">
+  <section class="panel">
+    <h2>Artifacts</h2>
+    <form class="stack-form" method="post" action="/cases/{{ case.case_id }}/artifacts">
+      <input name="artifact_type" placeholder="artifact type" required />
+      <input name="title" placeholder="title" required />
+      <textarea name="content" placeholder="content or path" required></textarea>
+      <textarea name="description" placeholder="description"></textarea>
+      <input name="added_by" placeholder="added by" value="analyst" />
+      <button class="btn" type="submit">Add Artifact</button>
+    </form>
+    {% if artifacts %}
+    <ul class="list">
+      {% for artifact in artifacts %}
+      <li><strong>{{ artifact.title }}</strong> ({{ artifact.artifact_type }})</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No artifacts attached yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Analyst Notes</h2>
+    <form class="stack-form" method="post" action="/cases/{{ case.case_id }}/notes">
+      <input name="author" placeholder="author" value="analyst" />
+      <label class="check"><input type="checkbox" name="important" value="true" /> Important</label>
+      <textarea name="note" placeholder="markdown/plain note" required></textarea>
+      <button class="btn" type="submit">Add Note</button>
+    </form>
+    {% if notes %}
+    <ul class="list">
+      {% for n in notes %}
+      <li>
+        {% if n.important %}<span class="badge warn">important</span>{% endif %}
+        <strong>{{ n.author }}</strong> - {{ n.note }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No notes yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

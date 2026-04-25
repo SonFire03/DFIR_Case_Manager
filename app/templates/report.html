@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Report {{ case.case_id }} | IncidentDesk{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Investigation Report - {{ case.case_id }}</h2>
+    <div>
+      <a class="btn" href="/api/cases/{{ case.case_id }}/report.md">Markdown</a>
+      <a class="btn" href="/api/cases/{{ case.case_id }}/report.html">HTML</a>
+      <a class="btn" href="/api/cases/{{ case.case_id }}/report.json">JSON</a>
+    </div>
+  </div>
+  <pre class="report-view">{{ report_md }}</pre>
+</section>
+{% endblock %}

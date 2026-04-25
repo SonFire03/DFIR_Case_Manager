@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Cases | IncidentDesk{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Create Case</h2>
+    <form method="post" action="/demo/seed">
+      <button class="btn secondary" type="submit">Seed Demo Data</button>
+    </form>
+  </div>
+  <form class="grid-form" method="post" action="/cases">
+    <label>Title<input name="title" required /></label>
+    <label>Owner<input name="owner" required /></label>
+    <label>Severity
+      <select name="severity">
+        <option value="critical">critical</option>
+        <option value="high">high</option>
+        <option value="medium" selected>medium</option>
+        <option value="low">low</option>
+      </select>
+    </label>
+    <label>Priority (1-5)<input type="number" min="1" max="5" name="priority" value="3" /></label>
+    <label>Tags<input name="tags" placeholder="ransomware,windows" /></label>
+    <label class="full">Description<textarea name="description"></textarea></label>
+    <button class="btn" type="submit">Create Case</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Filter Cases</h2>
+  <form class="filter-grid" method="get" action="/cases">
+    <label>Status
+      <select name="status">
+        <option value="">all</option>
+        {% for value in status_values %}
+        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Severity
+      <select name="severity">
+        <option value="">all</option>
+        {% for value in severity_values %}
+        <option value="{{ value }}" {% if filters.severity == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Owner<input name="owner" value="{{ filters.owner }}" placeholder="soc_analyst" /></label>
+    <label>Tag<input name="tag" value="{{ filters.tag }}" placeholder="phishing" /></label>
+    <div class="quick-actions">
+      <button class="btn" type="submit">Apply Filters</button>
+      <a class="btn ghost" href="/cases">Reset</a>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>All Cases</h2>
+  {% if cases %}
+  <table>
+    <thead>
+      <tr><th>Case ID</th><th>Title</th><th>Status</th><th>Severity</th><th>Owner</th><th>Tags</th></tr>
+    </thead>
+    <tbody>
+      {% for case in cases %}
+      <tr>
+        <td><a href="/cases/{{ case.case_id }}">{{ case.case_id }}</a></td>
+        <td>{{ case.title }}</td>
+        <td><span class="badge status-{{ case.status.value }}">{{ case.status.value }}</span></td>
+        <td><span class="badge sev-{{ case.severity.value }}">{{ case.severity.value }}</span></td>
+        <td>{{ case.owner }}</td>
+        <td>{{ case.tags }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No case matches the current filters.</p>
+  {% endif %}
+</section>
+{% endblock %}

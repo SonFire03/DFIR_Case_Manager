@@ -1,0 +1,8 @@
+{
+  "title": "Suspicious PowerShell execution on workstation",
+  "description": "Potential phishing-derived malware execution detected by EDR.",
+  "severity": "high",
+  "priority": 2,
+  "owner": "soc_analyst_1",
+  "tags": "phishing,endpoint,windows"
+}
